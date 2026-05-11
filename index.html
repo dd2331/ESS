@@ -29,6 +29,42 @@
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
       overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── CUSTOM CURSOR ── */
+    .cursor {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--bright);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+      mix-blend-mode: difference;
+    }
+    .cursor-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--bright);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.05s ease;
+    }
+    .cursor-trail {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,180,216,0.3) 0%, transparent 70%);
+      animation: trail-fade 0.8s ease-out forwards;
+    }
+    @keyframes trail-fade {
+      0% { opacity: 0.6; transform: scale(1); }
+      100% { opacity: 0; transform: scale(0); }
     }
 
     /* ── ANIMATED OCEAN BACKGROUND ── */
@@ -296,12 +332,33 @@
       border: 1px solid rgba(0,180,216,0.2);
       box-shadow: 0 0 80px rgba(0,180,216,0.1), 0 0 0 1px rgba(0,180,216,0.05);
       margin-top: 3rem;
+      background: rgba(2,14,26,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .video-wrapper iframe {
+    .video-placeholder {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      border: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      color: var(--text);
+      opacity: 0.6;
+    }
+    .video-placeholder-icon {
+      font-size: 4rem;
+      opacity: 0.5;
+    }
+    .video-placeholder-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
     }
     .video-caption {
       text-align: center;
@@ -387,6 +444,10 @@
 </head>
 <body>
 
+  <!-- Custom Cursor -->
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-dot" id="cursor-dot"></div>
+
   <!-- Animated BG -->
   <div class="ocean-bg"></div>
   <div class="particles" id="particles"></div>
@@ -460,12 +521,11 @@
         This short film captures the current state of our oceans — and the simple choices each of us can make to turn the tide.
       </p>
       <div class="video-wrapper reveal">
-        <iframe
-          src="https://www.youtube.com/embed/UQWC1P9MIy4?rel=0&modestbranding=1"
-          title="Ocean Sustainability — Human Impact"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen>
-        </iframe>
+        <div class="video-placeholder">
+          <div class="video-placeholder-icon">▶</div>
+          <div class="video-placeholder-text">Your Video Here</div>
+        </div>
+        <!-- Replace the placeholder above with your video embed code -->
       </div>
       <p class="video-caption">A compelling look at the urgency of ocean conservation.</p>
     </div>
@@ -506,6 +566,62 @@
   </footer>
 
   <script>
+    // ── CUSTOM CURSOR ──
+    const cursor = document.getElementById('cursor');
+    const cursorDot = document.getElementById('cursor-dot');
+    let mouseX = 0, mouseY = 0;
+    let cursorX = 0, cursorY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      
+      // Create trail particles
+      if (Math.random() > 0.7) {
+        const trail = document.createElement('div');
+        trail.className = 'cursor-trail';
+        const size = Math.random() * 15 + 5;
+        trail.style.width = size + 'px';
+        trail.style.height = size + 'px';
+        trail.style.left = (e.clientX - size/2) + 'px';
+        trail.style.top = (e.clientY - size/2) + 'px';
+        document.body.appendChild(trail);
+        
+        setTimeout(() => {
+          trail.remove();
+        }, 800);
+      }
+    });
+
+    function animateCursor() {
+      cursorX += (mouseX - cursorX) * 0.15;
+      cursorY += (mouseY - cursorY) * 0.15;
+      
+      cursor.style.left = (cursorX - 10) + 'px';
+      cursor.style.top = (cursorY - 10) + 'px';
+      
+      cursorDot.style.left = (mouseX - 3) + 'px';
+      cursorDot.style.top = (mouseY - 3) + 'px';
+      
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Hover effect on links and buttons
+    const hoverElements = document.querySelectorAll('a, button, .cta-btn, .card, .action-item');
+    hoverElements.forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        cursor.style.transform = 'scale(2)';
+        cursor.style.borderColor = 'var(--foam)';
+        cursor.style.background = 'rgba(0,180,216,0.1)';
+      });
+      el.addEventListener('mouseleave', () => {
+        cursor.style.transform = 'scale(1)';
+        cursor.style.borderColor = 'var(--bright)';
+        cursor.style.background = 'transparent';
+      });
+    });
+
     // ── PARTICLES ──
     const container = document.getElementById('particles');
     for (let i = 0; i < 28; i++) {
