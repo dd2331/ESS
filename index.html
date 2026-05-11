@@ -1,852 +1,870 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian of the Oceans | ESS Project</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #010911;
-            --surface: rgba(2, 20, 35, 0.5);
-            --border: rgba(0, 180, 216, 0.07);
-            --border-hover: rgba(0, 180, 216, 0.18);
-            --text: #7d929f;
-            --text-bright: #b0c4cf;
-            --heading: #e4eef5;
-            --accent: #00b4d8;
-            --accent-soft: rgba(0, 180, 216, 0.25);
-            --warn: #d4743b;
-            --transition: 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardian of the Oceans | ESS Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --deep: #020e1a;
+      --abyss: #04192e;
+      --ocean: #0a3d62;
+      --mid: #0c6e9e;
+      --bright: #00b4d8;
+      --foam: #90e0ef;
+      --white: #caf0f8;
+      --accent: #f77f00;
+      --danger: #e63946;
+      --text: #b8dce8;
+    }
 
-        html {
-            scroll-behavior: smooth;
-            font-size: 16px;
-        }
+    html { scroll-behavior: smooth; }
 
-        body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            font-weight: 300;
-            line-height: 1.65;
-            overflow-x: hidden;
-            cursor: none;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+    body {
+      background-color: var(--deep);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
 
-        ::selection {
-            background: rgba(0, 180, 216, 0.2);
-            color: var(--heading);
-        }
+    /* ── CUSTOM CURSOR ── */
+    .cursor-outer {
+      position: fixed;
+      pointer-events: none;
+      z-index: 10000;
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      will-change: left, top, width, height;
+      transition: width 0.4s ease, height 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+    }
+    .cursor-outer.hovering {
+      width: 48px;
+      height: 48px;
+      border-color: rgba(0, 180, 216, 0.5);
+      background: rgba(0, 180, 216, 0.06);
+    }
+    .cursor-dot {
+      width: 4px;
+      height: 4px;
+      background: #fff;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 10001;
+      transform: translate(-50%, -50%);
+      will-change: left, top;
+      box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+    }
 
-        .noise-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9998;
-            pointer-events: none;
-            opacity: 0.025;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-            background-size: 200px;
-        }
+    /* ── CANVAS BACKGROUND ── */
+    #bioluminescence {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.7;
+    }
 
-        .cursor-orbit {
-            position: fixed;
-            pointer-events: none;
-            z-index: 10000;
-            width: 120px;
-            height: 120px;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.3s ease;
-        }
-        .cursor-orbit canvas {
-            width: 100%;
-            height: 100%;
-        }
-        .cursor-dot {
-            width: 6px;
-            height: 6px;
-            background: #fff;
-            border-radius: 50%;
-            position: fixed;
-            pointer-events: none;
-            z-index: 10001;
-            box-shadow: 0 0 15px var(--accent), 0 0 30px rgba(0, 180, 216, 0.6);
-            transition: width 0.3s, height 0.3s, background 0.3s;
-        }
-        .cursor-dot.hovering {
-            width: 10px;
-            height: 10px;
-            box-shadow: 0 0 20px #fff, 0 0 50px rgba(0, 180, 216, 0.7);
-        }
+    /* ── MORPHING GRADIENT BLOBS ── */
+    .blob-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(80px);
+      opacity: 0.3;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      animation: morphBlob 20s ease-in-out infinite;
+    }
+    .blob-1 {
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,180,216,0.15), rgba(12,110,158,0.1));
+      top: -10%;
+      left: -5%;
+      animation-delay: 0s;
+    }
+    .blob-2 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(144,224,239,0.1), rgba(0,180,216,0.08));
+      bottom: -10%;
+      right: -5%;
+      animation-delay: -7s;
+    }
+    .blob-3 {
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(247,127,0,0.06), rgba(0,180,216,0.05));
+      top: 50%;
+      left: 50%;
+      animation-delay: -14s;
+    }
+    @keyframes morphBlob {
+      0%, 100% { transform: translate(0, 0) scale(1); border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; }
+      25% { transform: translate(100px, -80px) scale(1.2); border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%; }
+      50% { transform: translate(-50px, 100px) scale(0.9); border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%; }
+      75% { transform: translate(-120px, -50px) scale(1.1); border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+    }
 
-        .orb-container {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(130px);
-            opacity: 0.12;
-            animation: orbFloat 32s ease-in-out infinite;
-        }
-        .orb-1 { width: 900px; height: 900px; background: radial-gradient(circle, rgba(0, 180, 216, 0.45), transparent 70%); top: -35%; left: -18%; animation-delay: 0s; }
-        .orb-2 { width: 650px; height: 650px; background: radial-gradient(circle, rgba(12, 110, 158, 0.35), transparent 70%); bottom: -25%; right: -12%; animation-delay: -14s; animation-duration: 38s; }
-        .orb-3 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(144, 224, 239, 0.18), transparent 70%); top: 50%; left: 50%; animation-delay: -24s; animation-duration: 26s; }
+    /* ── SVG WAVES ── */
+    .waves-container {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      pointer-events: none;
+      height: 300px;
+    }
+    .waves-container svg {
+      position: absolute;
+      bottom: 0;
+      width: 200%;
+      height: 100%;
+    }
+    .wave-1 {
+      animation: waveMove 8s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+      opacity: 0.3;
+    }
+    .wave-2 {
+      animation: waveMove 12s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite reverse;
+      opacity: 0.2;
+      bottom: -20px;
+    }
+    .wave-3 {
+      animation: waveMove 16s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+      opacity: 0.1;
+      bottom: -40px;
+    }
+    @keyframes waveMove {
+      0% { transform: translateX(0) translateY(0); }
+      50% { transform: translateX(-25%) translateY(15px); }
+      100% { transform: translateX(-50%) translateY(0); }
+    }
 
-        @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(90px, -70px) scale(1.2); }
-            50% { transform: translate(-50px, 90px) scale(0.85); }
-            75% { transform: translate(-110px, -40px) scale(1.08); }
-        }
+    /* ── PARALLAX LAYERS ── */
+    .parallax-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.05;
+    }
+    .parallax-bubbles {
+      background: 
+        radial-gradient(2px 2px at 20% 30%, var(--foam), transparent),
+        radial-gradient(2px 2px at 40% 70%, var(--foam), transparent),
+        radial-gradient(3px 3px at 60% 20%, var(--bright), transparent),
+        radial-gradient(1px 1px at 80% 50%, var(--foam), transparent),
+        radial-gradient(2px 2px at 10% 80%, var(--bright), transparent),
+        radial-gradient(3px 3px at 70% 90%, var(--foam), transparent),
+        radial-gradient(1px 1px at 30% 10%, var(--bright), transparent),
+        radial-gradient(2px 2px at 90% 40%, var(--foam), transparent),
+        radial-gradient(3px 3px at 50% 60%, var(--bright), transparent),
+        radial-gradient(1px 1px at 15% 45%, var(--foam), transparent);
+      background-size: 200% 200%;
+      animation: parallaxSlow 30s linear infinite;
+    }
+    .parallax-particles {
+      background: 
+        radial-gradient(1px 1px at 25% 25%, var(--bright), transparent),
+        radial-gradient(1px 1px at 75% 75%, var(--bright), transparent),
+        radial-gradient(2px 2px at 45% 55%, var(--foam), transparent),
+        radial-gradient(1px 1px at 65% 35%, var(--bright), transparent),
+        radial-gradient(2px 2px at 85% 15%, var(--foam), transparent);
+      background-size: 300% 300%;
+      animation: parallaxFast 20s linear infinite;
+      opacity: 0.08;
+    }
+    @keyframes parallaxSlow {
+      0% { background-position: 0% 0%; }
+      100% { background-position: 100% 100%; }
+    }
+    @keyframes parallaxFast {
+      0% { background-position: 100% 0%; }
+      100% { background-position: 0% 100%; }
+    }
 
-        #bioluminescence {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            opacity: 0.55;
-        }
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: rgba(2,14,26,0.5);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(0,180,216,0.1);
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 3px;
+      color: var(--bright);
+      text-shadow: 0 0 20px rgba(0,180,216,0.5);
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+    .nav-links a:hover { 
+      color: var(--bright);
+      text-shadow: 0 0 15px rgba(0,180,216,0.6);
+    }
 
-        .waves-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 2;
-            pointer-events: none;
-            height: 260px;
-            opacity: 0.22;
-        }
-        .waves-container svg { position: absolute; bottom: 0; width: 200%; height: 100%; }
-        .wave-1 { animation: waveDrift 16s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite; }
-        .wave-2 { animation: waveDrift 22s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite reverse; bottom: -35px; opacity: 0.5; }
-        .wave-3 { animation: waveDrift 28s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite; bottom: -70px; opacity: 0.3; }
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 3;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      padding-top: 5rem;
+    }
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      color: var(--bright);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fade-up 0.8s 0.2s forwards;
+      text-shadow: 0 0 10px rgba(0,180,216,0.4);
+    }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 14vw, 13rem);
+      line-height: 0.88;
+      color: var(--white);
+      letter-spacing: 2px;
+      opacity: 0;
+      animation: fade-up 1s 0.4s forwards;
+      position: relative;
+    }
+    .hero h1 span { 
+      color: var(--bright); 
+      display: block;
+      text-shadow: 0 0 30px rgba(0,180,216,0.4), 0 0 60px rgba(0,180,216,0.2);
+    }
+    
+    /* ── GLITCH TEXT ── */
+    .glitch {
+      position: relative;
+      display: inline-block;
+    }
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .glitch::before {
+      color: #ff6b6b;
+      z-index: -1;
+      animation: glitch-anim-1 2s infinite linear alternate-reverse;
+      clip-path: inset(20% 0 50% 0);
+    }
+    .glitch::after {
+      color: #4ecdc4;
+      z-index: -2;
+      animation: glitch-anim-2 1.5s infinite linear alternate-reverse;
+      clip-path: inset(60% 0 10% 0);
+    }
+    @keyframes glitch-anim-1 {
+      0%, 90%, 100% { transform: translate(0); }
+      91% { transform: translate(-2px, 1px); }
+      93% { transform: translate(0); }
+      95% { transform: translate(2px, -1px); }
+    }
+    @keyframes glitch-anim-2 {
+      0%, 85%, 100% { transform: translate(0); }
+      86% { transform: translate(3px, 2px); }
+      88% { transform: translate(0); }
+      90% { transform: translate(-2px, -1px); }
+    }
 
-        @keyframes waveDrift {
-            0% { transform: translateX(0) translateY(0); }
-            50% { transform: translateX(-25%) translateY(14px); }
-            100% { transform: translateX(-50%) translateY(0); }
-        }
+    .hero-sub {
+      max-width: 540px;
+      margin: 2.5rem auto 3rem;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text);
+      opacity: 0;
+      animation: fade-up 0.8s 0.7s forwards;
+    }
+    .cta-btn {
+      display: inline-block;
+      padding: 1rem 2.8rem;
+      background: transparent;
+      border: 2px solid var(--bright);
+      color: var(--bright);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s;
+      opacity: 0;
+      animation: fade-up 0.8s 1s forwards;
+      position: relative;
+      overflow: hidden;
+      text-shadow: 0 0 10px rgba(0,180,216,0.5);
+      box-shadow: 0 0 20px rgba(0,180,216,0.1), inset 0 0 20px rgba(0,180,216,0.05);
+    }
+    .cta-btn::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: var(--bright);
+      transition: all 0.5s;
+      transform: translate(-50%, -50%);
+      z-index: -1;
+    }
+    .cta-btn:hover {
+      color: var(--deep);
+      transform: translateY(-3px);
+      box-shadow: 0 0 40px rgba(0,180,216,0.4), 0 10px 30px rgba(0,180,216,0.2);
+    }
+    .cta-btn:hover::before {
+      width: 300px;
+      height: 300px;
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-        nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1.4rem 4rem;
-            background: rgba(1, 9, 17, 0.35);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-bottom: 1px solid var(--border);
-        }
-        nav.scrolled {
-            background: rgba(1, 9, 17, 0.7);
-        }
-        .nav-logo {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.35rem;
-            font-weight: 500;
-            letter-spacing: 2px;
-            color: var(--heading);
-            text-decoration: none;
-        }
-        .nav-logo span { color: var(--accent); }
-        .nav-links { display: flex; gap: 3rem; list-style: none; }
-        .nav-links a {
-            color: var(--text);
-            text-decoration: none;
-            font-size: 0.68rem;
-            font-weight: 500;
-            letter-spacing: 2.5px;
-            text-transform: uppercase;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover { color: var(--heading); }
+    /* ── STAT BAR ── */
+    .stat-bar {
+      position: relative; z-index: 3;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid rgba(0,180,216,0.15);
+      border-bottom: 1px solid rgba(0,180,216,0.15);
+      background: rgba(4,25,46,0.4);
+      backdrop-filter: blur(10px);
+    }
+    .stat-item {
+      padding: 2.5rem 2rem;
+      text-align: center;
+      border-right: 1px solid rgba(0,180,216,0.1);
+      transition: background 0.3s;
+    }
+    .stat-item:hover {
+      background: rgba(0,180,216,0.05);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      color: var(--bright);
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(0,180,216,0.3);
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-top: 0.4rem;
+      opacity: 0.7;
+    }
 
-        .hero {
-            position: relative;
-            z-index: 3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-            padding-top: 5rem;
-        }
-        .hero-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.62rem;
-            font-weight: 400;
-            letter-spacing: 5px;
-            color: var(--accent);
-            text-transform: uppercase;
-            margin-bottom: 2rem;
-            opacity: 0;
-            animation: fadeUp 0.9s 0.1s forwards;
-        }
-        .hero h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(4.5rem, 10vw, 9rem);
-            font-weight: 300;
-            line-height: 0.86;
-            color: var(--heading);
-            letter-spacing: -1.5px;
-            opacity: 0;
-            animation: fadeUp 1s 0.3s forwards;
-            max-width: 950px;
-        }
-        .hero h1 em {
-            font-style: italic;
-            color: var(--accent);
-            display: block;
-            font-weight: 300;
-        }
-        .hero-line {
-            width: 50px;
-            height: 1px;
-            background: var(--accent);
-            margin: 2.5rem auto;
-            opacity: 0;
-            animation: fadeUp 0.8s 0.6s forwards;
-        }
-        .hero p {
-            max-width: 480px;
-            margin: 0 auto 3.5rem;
-            font-size: 0.95rem;
-            line-height: 1.85;
-            color: var(--text-bright);
-            opacity: 0;
-            animation: fadeUp 0.8s 0.8s forwards;
-            font-weight: 300;
-        }
-        .btn {
-            display: inline-block;
-            padding: 0.85rem 2.5rem;
-            background: transparent;
-            border: 1px solid rgba(0, 180, 216, 0.35);
-            color: var(--accent);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.62rem;
-            font-weight: 400;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
-            opacity: 0;
-            animation: fadeUp 0.8s 1.1s forwards;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--accent);
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
-            z-index: -1;
-        }
-        .btn:hover {
-            color: var(--bg);
-            border-color: var(--accent);
-        }
-        .btn:hover::before {
-            transform: scaleX(1);
-        }
-        @keyframes fadeUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    /* ── SECTION WRAPPER ── */
+    .section {
+      position: relative; z-index: 3;
+      padding: 7rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      color: var(--bright);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+      text-shadow: 0 0 10px rgba(0,180,216,0.3);
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      color: var(--white);
+      letter-spacing: 1px;
+      line-height: 1;
+      margin-bottom: 1.5rem;
+    }
 
-        .stats {
-            position: relative;
-            z-index: 3;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-            background: var(--surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-        .stat {
-            padding: 3rem 2rem;
-            text-align: center;
-            border-right: 1px solid var(--border);
-            transition: background 0.5s;
-        }
-        .stat:last-child { border-right: none; }
-        .stat:hover {
-            background: rgba(0, 180, 216, 0.025);
-        }
-        .stat-value {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 4.2rem;
-            font-weight: 300;
-            color: var(--heading);
-            line-height: 1;
-            margin-bottom: 0.3rem;
-        }
-        .stat-label {
-            font-size: 0.65rem;
-            font-weight: 500;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: var(--text);
-            opacity: 0.55;
-        }
+    /* ── CHALLENGE CARDS ── */
+    .challenges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5px;
+      margin-top: 4rem;
+      border: 1.5px solid rgba(0,180,216,0.15);
+    }
+    .card {
+      background: rgba(4,25,46,0.4);
+      padding: 3rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s;
+      cursor: default;
+      backdrop-filter: blur(5px);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--bright), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .card:hover { 
+      background: rgba(10,61,98,0.5);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 30px rgba(0,180,216,0.1);
+    }
+    .card:hover::before { transform: translateX(100%); }
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--white);
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+    .card-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text);
+      opacity: 0.85;
+    }
+    .card-stat {
+      margin-top: 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
 
-        .section {
-            position: relative;
-            z-index: 3;
-            padding: 9rem 4rem;
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-        .section-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            font-weight: 400;
-            letter-spacing: 5px;
-            color: var(--accent);
-            text-transform: uppercase;
-            margin-bottom: 1.5rem;
-            opacity: 0.7;
-        }
-        .section-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: clamp(2.8rem, 5vw, 4.5rem);
-            font-weight: 300;
-            color: var(--heading);
-            letter-spacing: -0.5px;
-            line-height: 1.05;
-            margin-bottom: 1rem;
-        }
-        .section-title em {
-            font-style: italic;
-            color: var(--accent);
-        }
+    /* ── VIDEO SECTION ── */
+    .video-section {
+      position: relative; z-index: 3;
+      background: rgba(4,25,46,0.6);
+      backdrop-filter: blur(10px);
+      padding: 7rem 3rem;
+    }
+    .video-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border: 1px solid rgba(0,180,216,0.2);
+      box-shadow: 0 0 80px rgba(0,180,216,0.1), 0 0 0 1px rgba(0,180,216,0.05);
+      margin-top: 3rem;
+      background: rgba(2,14,26,0.8);
+    }
+    .video-placeholder {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      color: var(--text);
+      opacity: 0.6;
+      transition: opacity 0.3s;
+    }
+    .video-placeholder:hover {
+      opacity: 0.8;
+    }
+    .video-placeholder-icon {
+      font-size: 4rem;
+      opacity: 0.5;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+    .video-placeholder-text {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    .video-caption {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      opacity: 0.5;
+      font-family: 'Space Mono', monospace;
+    }
 
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1px;
-            margin-top: 5rem;
-            background: var(--border);
-        }
-        .card {
-            background: var(--surface);
-            padding: 3.5rem 2.5rem;
-            position: relative;
-            transition: all 0.5s;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid transparent;
-            overflow: hidden;
-        }
-        .card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
-        }
-        .card:hover {
-            background: rgba(2, 28, 45, 0.65);
-            border-color: var(--border-hover);
-            transform: translateY(-3px);
-        }
-        .card:hover::after {
-            transform: translateX(100%);
-        }
-        .card-marker {
-            display: block;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: var(--accent);
-            margin-bottom: 2rem;
-            opacity: 0.5;
-            transition: opacity 0.3s, box-shadow 0.3s;
-        }
-        .card:hover .card-marker {
-            opacity: 1;
-            box-shadow: 0 0 18px var(--accent-soft);
-        }
-        .card h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.8rem;
-            font-weight: 400;
-            color: var(--heading);
-            margin-bottom: 1.2rem;
-            letter-spacing: -0.2px;
-        }
-        .card p {
-            font-size: 0.88rem;
-            line-height: 1.8;
-            color: var(--text);
-            font-weight: 300;
-        }
-        .card-stat {
-            margin-top: 2.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.58rem;
-            letter-spacing: 3px;
-            color: var(--warn);
-            text-transform: uppercase;
-        }
+    /* ── TAKE ACTION ── */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .action-item {
+      padding: 2rem;
+      border: 1px solid rgba(0,180,216,0.15);
+      background: rgba(4,25,46,0.3);
+      backdrop-filter: blur(5px);
+      transition: all 0.3s;
+    }
+    .action-item:hover {
+      border-color: var(--bright);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0,180,216,0.15);
+      background: rgba(4,25,46,0.5);
+    }
+    .action-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      color: rgba(0,180,216,0.15);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .action-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .action-text {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      opacity: 0.7;
+    }
 
-        .video-section {
-            position: relative;
-            z-index: 3;
-            background: var(--surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 9rem 4rem;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
-        }
-        .video-inner {
-            max-width: 1000px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        .video-frame {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            margin-top: 4rem;
-            background: var(--bg);
-            box-shadow: 0 0 140px rgba(0, 0, 0, 0.5);
-        }
-        .video-placeholder {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 1.5rem;
-            color: var(--text);
-            opacity: 0.4;
-            transition: opacity 0.5s;
-        }
-        .video-placeholder:hover {
-            opacity: 0.65;
-        }
-        .video-placeholder-icon {
-            width: 80px;
-            height: 80px;
-            border: 1.5px solid rgba(0, 180, 216, 0.35);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .video-placeholder:hover .video-placeholder-icon {
-            border-color: var(--accent);
-            box-shadow: 0 0 45px var(--accent-soft);
-        }
-        .video-placeholder-label {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.58rem;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-        }
-        .video-caption {
-            margin-top: 1.8rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.52rem;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            opacity: 0.3;
-        }
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 3;
+      border-top: 1px solid rgba(0,180,216,0.1);
+      padding: 3rem;
+      text-align: center;
+      backdrop-filter: blur(10px);
+      background: rgba(2,14,26,0.5);
+    }
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      opacity: 0.4;
+      margin-bottom: 0.4rem;
+    }
 
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1px;
-            margin-top: 5rem;
-            background: var(--border);
-        }
-        .action {
-            background: var(--surface);
-            padding: 2.8rem 2rem;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: all 0.4s;
-            cursor: pointer;
-            border: 1px solid transparent;
-        }
-        .action:hover {
-            background: rgba(2, 28, 45, 0.65);
-            border-color: var(--border-hover);
-            transform: translateY(-3px);
-        }
-        .action-num {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 3.5rem;
-            font-weight: 300;
-            color: rgba(0, 180, 216, 0.1);
-            line-height: 1;
-            margin-bottom: 1rem;
-            transition: color 0.4s;
-        }
-        .action:hover .action-num {
-            color: rgba(0, 180, 216, 0.22);
-        }
-        .action h4 {
-            font-size: 0.82rem;
-            font-weight: 500;
-            color: var(--heading);
-            margin-bottom: 0.7rem;
-            letter-spacing: 0.5px;
-        }
-        .action p {
-            font-size: 0.78rem;
-            line-height: 1.7;
-            color: var(--text);
-            font-weight: 300;
-        }
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s, transform 0.8s;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-        footer {
-            position: relative;
-            z-index: 3;
-            border-top: 1px solid var(--border);
-            padding: 4rem;
-            text-align: center;
-            background: rgba(1, 9, 17, 0.55);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-        footer p {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.5rem;
-            letter-spacing: 3px;
-            opacity: 0.28;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
-
-        .reveal {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
-        }
-        .reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        @media (max-width: 900px) {
-            nav { padding: 1.2rem 2rem; }
-            .nav-links { gap: 1.5rem; }
-            .section { padding: 6rem 2rem; }
-            .video-section { padding: 6rem 2rem; }
-            .cards-grid { grid-template-columns: 1fr; }
-            .stats { grid-template-columns: 1fr; }
-            .stat { border-right: none; border-bottom: 1px solid var(--border); padding: 2rem; }
-            .stat:last-child { border-bottom: none; }
-            .actions-grid { grid-template-columns: 1fr 1fr; }
-            .hero h1 { font-size: clamp(3rem, 12vw, 5rem); }
-        }
-        @media (max-width: 500px) {
-            .actions-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .section { padding: 5rem 1.5rem; }
+      .stat-bar { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid rgba(0,180,216,0.1); }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="noise-overlay"></div>
+  <!-- Custom Cursor -->
+  <div class="cursor-outer" id="cursor-outer"></div>
+  <div class="cursor-dot" id="cursor-dot"></div>
 
-    <div class="cursor-orbit" id="cursor-orbit">
-        <canvas id="orbit-canvas"></canvas>
+  <!-- Morphing Gradient Blobs -->
+  <div class="blob-container">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <!-- Parallax Layers -->
+  <div class="parallax-layer parallax-bubbles"></div>
+  <div class="parallax-layer parallax-particles"></div>
+
+  <!-- Bioluminescence Canvas -->
+  <canvas id="bioluminescence"></canvas>
+
+  <!-- SVG Waves -->
+  <div class="waves-container">
+    <svg class="wave-1" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="rgba(0,180,216,0.15)" d="M0,160L48,176C96,192,192,224,288,213.3C384,203,480,149,576,138.7C672,128,768,160,864,181.3C960,203,1056,213,1152,202.7C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+    <svg class="wave-2" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="rgba(12,110,158,0.2)" d="M0,192L48,176C96,160,192,128,288,144C384,160,480,224,576,234.7C672,245,768,203,864,181.3C960,160,1056,160,1152,170.7C1248,181,1344,203,1392,213.3L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+    <svg class="wave-3" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="rgba(0,180,216,0.08)" d="M0,128L48,149.3C96,171,192,213,288,224C384,235,480,213,576,186.7C672,160,768,128,864,122.7C960,117,1056,139,1152,154.7C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+  </div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">🌊 Guardian</div>
+    <ul class="nav-links">
+      <li><a href="#challenges">Threats</a></li>
+      <li><a href="#video">Watch</a></li>
+      <li><a href="#action">Act</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-eyebrow">ESS Class Project — SDG 14</p>
+    <h1>Preserving<span class="glitch" data-text="Our Oceans">Our Oceans</span></h1>
+    <p class="hero-sub">Our oceans cover 70% of the planet, regulate our climate, and feed billions. They're under siege — and the clock is running out.</p>
+    <a href="#challenges" class="cta-btn">Explore the Crisis</a>
+  </section>
+
+  <!-- STAT BAR -->
+  <div class="stat-bar">
+    <div class="stat-item">
+      <div class="stat-num">90%</div>
+      <div class="stat-label">Of Big Fish Populations Depleted</div>
     </div>
-    <div class="cursor-dot" id="cursor-dot"></div>
-
-    <div class="orb-container">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="orb orb-3"></div>
+    <div class="stat-item">
+      <div class="stat-num">8M</div>
+      <div class="stat-label">Tons of Plastic Enter Oceans Yearly</div>
     </div>
-
-    <canvas id="bioluminescence"></canvas>
-
-    <div class="waves-container">
-        <svg class="wave-1" viewBox="0 0 1440 260" preserveAspectRatio="none">
-            <path fill="rgba(0,180,216,0.1)" d="M0,130L48,144C96,158,192,186,288,176.7C384,167,480,121,576,111.3C672,102,768,130,864,148.7C960,167,1056,177,1152,167.3C1248,158,1344,130,1392,116L1440,102L1440,260L1392,260C1344,260,1248,260,1152,260C1056,260,960,260,864,260C768,260,672,260,576,260C480,260,384,260,288,260C192,260,96,260,48,260L0,260Z"/>
-        </svg>
-        <svg class="wave-2" viewBox="0 0 1440 260" preserveAspectRatio="none">
-            <path fill="rgba(12,110,158,0.08)" d="M0,158L48,144C96,130,192,102,288,116C384,130,480,186,576,195.3C672,205,768,167,864,148.7C960,130,1056,130,1152,139.3C1248,149,1344,167,1392,176.7L1440,186L1440,260L1392,260C1344,260,1248,260,1152,260C1056,260,960,260,864,260C768,260,672,260,576,260C480,260,384,260,288,260C192,260,96,260,48,260L0,260Z"/>
-        </svg>
-        <svg class="wave-3" viewBox="0 0 1440 260" preserveAspectRatio="none">
-            <path fill="rgba(0,180,216,0.05)" d="M0,102L48,120.7C96,139,192,177,288,186C384,195,480,177,576,153.3C672,130,768,102,864,97.3C960,93,1056,112,1152,125.3C1248,139,1344,149,1392,153.3L1440,158L1440,260L1392,260C1344,260,1248,260,1152,260C1056,260,960,260,864,260C768,260,672,260,576,260C480,260,384,260,288,260C192,260,96,260,48,260L0,260Z"/>
-        </svg>
+    <div class="stat-item">
+      <div class="stat-num">50%</div>
+      <div class="stat-label">Of Coral Reefs Lost Since 1950</div>
     </div>
+  </div>
 
-    <nav id="nav">
-        <a href="#" class="nav-logo"><span>◆</span> Guardian</a>
-        <ul class="nav-links">
-            <li><a href="#threats">Threats</a></li>
-            <li><a href="#watch">Watch</a></li>
-            <li><a href="#act">Act</a></li>
-        </ul>
-    </nav>
+  <!-- CHALLENGES -->
+  <div class="section" id="challenges">
+    <p class="section-tag reveal">Core Threats</p>
+    <h2 class="section-title reveal">The Crisis,<br>Laid Bare</h2>
+    <div class="challenges-grid">
+      <div class="card reveal">
+        <span class="card-icon">🚫</span>
+        <div class="card-title">Overfishing</div>
+        <p class="card-text">Global fish stocks are being stripped faster than they can ever recover. Entire food webs collapse as keystone species vanish, threatening the food security of over 600 million people who depend on fisheries.</p>
+        <div class="card-stat">⚠ 1 in 3 fish stocks — overexploited</div>
+      </div>
+      <div class="card reveal">
+        <span class="card-icon">🧪</span>
+        <div class="card-title">Pollution</div>
+        <p class="card-text">From the Great Pacific Garbage Patch to invisible microplastics, human waste has colonized every corner of the ocean. Microplastics now infiltrate the tissue of virtually every marine creature on Earth.</p>
+        <div class="card-stat">⚠ 51 trillion microplastic particles in our oceans</div>
+      </div>
+      <div class="card reveal">
+        <span class="card-icon">🌡️</span>
+        <div class="card-title">Climate Change</div>
+        <p class="card-text">The ocean absorbs 90% of the planet's excess heat. The result: mass coral bleaching events, rising sea levels, and ocean acidification that dissolves the shells of the creatures at the base of the food chain.</p>
+        <div class="card-stat">⚠ Ocean pH dropped 0.1 units — a 30% increase in acidity</div>
+      </div>
+    </div>
+  </div>
 
-    <section class="hero">
-        <p class="hero-label">ESS Project · SDG 14</p>
-        <h1>Preserving<br><em>Our Oceans</em></h1>
-        <div class="hero-line"></div>
-        <p>Covering 70% of our planet, oceans regulate climate and sustain billions of lives. They are under unprecedented threat — and the time to act is now.</p>
-        <a href="#threats" class="btn">Explore the Crisis</a>
-    </section>
-
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-value">90%</div>
-            <div class="stat-label">Big fish populations depleted</div>
+  <!-- VIDEO -->
+  <div class="video-section" id="video">
+    <div class="video-inner">
+      <p class="section-tag reveal" style="text-align:center;">Watch</p>
+      <h2 class="section-title reveal" style="text-align:center;">See It<br>Happening</h2>
+      <p class="reveal" style="text-align:center; max-width:580px; margin:0 auto; line-height:1.8; opacity:0.8;">
+        This short film captures the current state of our oceans — and the simple choices each of us can make to turn the tide.
+      </p>
+      <div class="video-wrapper reveal">
+        <div class="video-placeholder">
+          <div class="video-placeholder-icon">▶</div>
+          <div class="video-placeholder-text">Your Video Here</div>
         </div>
-        <div class="stat">
-            <div class="stat-value">8M</div>
-            <div class="stat-label">Tons of plastic yearly</div>
-        </div>
-        <div class="stat">
-            <div class="stat-value">50%</div>
-            <div class="stat-label">Coral reefs lost since 1950</div>
-        </div>
+        <!-- Replace the placeholder above with your video embed code -->
+      </div>
+      <p class="video-caption">A compelling look at the urgency of ocean conservation.</p>
     </div>
+  </div>
 
-    <div class="section" id="threats">
-        <p class="section-label reveal">The Crisis</p>
-        <h2 class="section-title reveal">What's happening<br><em>beneath the surface</em></h2>
-        <div class="cards-grid">
-            <div class="card reveal">
-                <span class="card-marker"></span>
-                <h3>Overfishing</h3>
-                <p>Industrial fleets strip fish stocks faster than they can recover. Keystone species collapse, threatening food security for over 600 million people worldwide.</p>
-                <p class="card-stat">1 in 3 stocks overexploited</p>
-            </div>
-            <div class="card reveal">
-                <span class="card-marker"></span>
-                <h3>Pollution</h3>
-                <p>From the Great Pacific Garbage Patch to microplastics in the deepest trenches, human waste has infiltrated every marine ecosystem on Earth.</p>
-                <p class="card-stat">51 trillion microplastic particles</p>
-            </div>
-            <div class="card reveal">
-                <span class="card-marker"></span>
-                <h3>Climate Change</h3>
-                <p>Oceans absorb 90% of excess heat. The result: mass bleaching, acidification dissolving shell-building creatures, and rising seas reshaping coastlines.</p>
-                <p class="card-stat">30% increase in acidity</p>
-            </div>
-        </div>
+  <!-- TAKE ACTION -->
+  <div class="section" id="action">
+    <p class="section-tag reveal">What You Can Do</p>
+    <h2 class="section-title reveal">Small Actions,<br>Ocean Impact</h2>
+    <div class="actions-grid">
+      <div class="action-item reveal">
+        <div class="action-num">01</div>
+        <div class="action-title">Cut Single-Use Plastic</div>
+        <p class="action-text">Swap plastic bags, straws, and bottles for reusable alternatives. It's one of the fastest wins for marine life.</p>
+      </div>
+      <div class="action-item reveal">
+        <div class="action-num">02</div>
+        <div class="action-title">Eat Sustainably</div>
+        <p class="action-text">Choose seafood certified by the Marine Stewardship Council. Demand drives what fisheries supply.</p>
+      </div>
+      <div class="action-item reveal">
+        <div class="action-num">03</div>
+        <div class="action-title">Reduce Your Carbon</div>
+        <p class="action-text">Every ton of CO₂ avoided helps slow ocean warming and acidification. Walk, cycle, offset.</p>
+      </div>
+      <div class="action-item reveal">
+        <div class="action-num">04</div>
+        <div class="action-title">Support Ocean NGOs</div>
+        <p class="action-text">Organizations like Oceana and Ocean Conservancy fight daily for policy change and clean-up efforts.</p>
+      </div>
     </div>
+  </div>
 
-    <div class="video-section" id="watch">
-        <div class="video-inner">
-            <p class="section-label reveal">Watch</p>
-            <h2 class="section-title reveal">See it<br><em>for yourself</em></h2>
-            <p class="reveal" style="max-width:520px;margin:0 auto;line-height:1.8;opacity:0.7;font-weight:300;">
-                A short film on the state of our oceans — and the choices that can turn the tide.
-            </p>
-            <div class="video-frame reveal">
-                <div class="video-placeholder">
-                    <div class="video-placeholder-icon">▶</div>
-                    <p class="video-placeholder-label">Your Video Here</p>
-                </div>
-            </div>
-            <p class="video-caption">Replace with your own video embed</p>
-        </div>
-    </div>
+  <!-- FOOTER -->
+  <footer>
+    <p>Created by dd2331 for ESS Class Project</p>
+    <p>Source: UN Sustainable Development Goal 14 — Life Below Water</p>
+  </footer>
 
-    <div class="section" id="act">
-        <p class="section-label reveal">Take Action</p>
-        <h2 class="section-title reveal">Small steps,<br><em>ocean-scale impact</em></h2>
-        <div class="actions-grid">
-            <div class="action reveal">
-                <div class="action-num">01</div>
-                <h4>Cut Single-Use Plastic</h4>
-                <p>Swap bags, straws, and bottles for reusable alternatives.</p>
-            </div>
-            <div class="action reveal">
-                <div class="action-num">02</div>
-                <h4>Choose Sustainable Seafood</h4>
-                <p>Look for MSC certification. Demand shapes supply.</p>
-            </div>
-            <div class="action reveal">
-                <div class="action-num">03</div>
-                <h4>Reduce Carbon Footprint</h4>
-                <p>Every ton of CO₂ avoided slows ocean warming.</p>
-            </div>
-            <div class="action reveal">
-                <div class="action-num">04</div>
-                <h4>Support Ocean NGOs</h4>
-                <p>Groups like Oceana fight for policy and clean-up efforts.</p>
-            </div>
-        </div>
-    </div>
+  <script>
+    // ── CURSOR + BIOLUMINESCENCE (single animation loop) ──
+    const cursorOuter = document.getElementById('cursor-outer');
+    const cursorDot = document.getElementById('cursor-dot');
+    const canvas = document.getElementById('bioluminescence');
+    const ctx = canvas.getContext('2d');
+    
+    let mx = 0, my = 0, ox = 0, oy = 0;
+    let particles = [];
+    let canvasWidth, canvasHeight;
+    const MAX_PARTICLES = 60;
 
-    <footer>
-        <p>Created by dd2331 · ESS Class Project</p>
-        <p>UN Sustainable Development Goal 14 — Life Below Water</p>
-    </footer>
+    function resizeCanvas() {
+      canvasWidth = canvas.width = window.innerWidth;
+      canvasHeight = canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    <script>
-        const orbitContainer = document.getElementById('cursor-orbit');
-        const orbitCanvas = document.getElementById('orbit-canvas');
-        const orbitCtx = orbitCanvas.getContext('2d');
-        const cursorDot = document.getElementById('cursor-dot');
-        let mx = 0, my = 0, ox = 0, oy = 0, orbAngle = 0;
-
-        const rings = [
-            { radius: 20, speed: 0.02, opacity: 0.6, size: 2.5, tilt: 0.4 },
-            { radius: 35, speed: -0.015, opacity: 0.4, size: 2, tilt: -0.3 },
-            { radius: 50, speed: 0.01, opacity: 0.3, size: 3, tilt: 0.6 }
-        ];
-
-        document.addEventListener('mousemove', e => {
-            mx = e.clientX;
-            my = e.clientY;
-            cursorDot.style.left = mx + 'px';
-            cursorDot.style.top = my + 'px';
-            cursorDot.style.transform = 'translate(-50%, -50%)';
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX;
+      my = e.clientY;
+      cursorDot.style.left = mx + 'px';
+      cursorDot.style.top = my + 'px';
+      
+      // Only spawn particles every 3rd move event to reduce load
+      if (particles.length < MAX_PARTICLES && Math.random() > 0.6) {
+        particles.push({
+          x: mx + (Math.random() - 0.5) * 40,
+          y: my + (Math.random() - 0.5) * 40,
+          size: Math.random() * 2 + 0.5,
+          vx: (Math.random() - 0.5) * 1.5,
+          vy: (Math.random() - 0.5) * 1.5 - 0.8,
+          life: 1,
+          decay: Math.random() * 0.015 + 0.008,
+          hue: Math.random() * 40 + 180,
+          pulse: Math.random() * Math.PI * 2
         });
+      }
+    });
 
-        function drawOrbitals() {
-            ox += (mx - ox) * 0.12; 
-            oy += (my - oy) * 0.12;
-            orbitContainer.style.left = ox + 'px';
-            orbitContainer.style.top = oy + 'px';
+    // Single animation loop handles both cursor AND bioluminescence
+    function animate() {
+      // Cursor
+      ox += (mx - ox) * 0.2;
+      oy += (my - oy) * 0.2;
+      cursorOuter.style.left = ox + 'px';
+      cursorOuter.style.top = oy + 'px';
 
-            orbitCtx.clearRect(0, 0, orbitCanvas.width, orbitCanvas.height);
-            const cx = orbitCanvas.width / 2;
-            const cy = orbitCanvas.height / 2;
-            orbAngle += 0.015;
-
-            rings.forEach((ring, i) => {
-                const rotation = orbAngle * 0.5 + i;
-                const tiltAngle = Math.sin(orbAngle * 0.3 + i) * 0.5;
-                
-                orbitCtx.save();
-                orbitCtx.translate(cx, cy);
-                orbitCtx.rotate(rotation);
-                
-                orbitCtx.beginPath();
-                orbitCtx.ellipse(0, 0, ring.radius, ring.radius * 0.4, tiltAngle, 0, Math.PI * 2);
-                orbitCtx.strokeStyle = `rgba(0,180,216,${ring.opacity * 0.3})`;
-                orbitCtx.stroke();
-
-                const pAngle = orbAngle * ring.speed * 80;
-                const px = Math.cos(pAngle) * ring.radius;
-                const py = Math.sin(pAngle) * ring.radius * 0.4;
-
-                orbitCtx.beginPath();
-                orbitCtx.arc(px, py, ring.size, 0, Math.PI * 2);
-                orbitCtx.fillStyle = `rgba(144,224,239,${ring.opacity})`;
-                orbitCtx.shadowBlur = 10;
-                orbitCtx.shadowColor = "rgba(0,180,216,0.8)";
-                orbitCtx.fill();
-                orbitCtx.restore();
-            });
-
-            requestAnimationFrame(drawOrbitals);
+      // Bioluminescence
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        p.pulse += 0.05;
+        
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
         }
+        
+        const alpha = p.life * (0.4 + Math.sin(p.pulse) * 0.25);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${alpha})`;
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${p.hue}, 80%, 70%, ${alpha * 0.15})`;
+        ctx.fill();
+      }
+      
+      // Trim excess particles
+      if (particles.length > MAX_PARTICLES) {
+        particles = particles.slice(-MAX_PARTICLES);
+      }
 
-        orbitCanvas.width = 120;
-        orbitCanvas.height = 120;
-        drawOrbitals();
+      requestAnimationFrame(animate);
+    }
+    animate();
 
-        const hoverTargets = document.querySelectorAll('a, button, .btn, .card, .action, .stat, .video-placeholder');
-        hoverTargets.forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                cursorDot.classList.add('hovering');
-            });
-            el.addEventListener('mouseleave', () => {
-                cursorDot.classList.remove('hovering');
-            });
-        });
+    // Hover
+    const hoverTargets = document.querySelectorAll('a, button, .cta-btn, .card, .action-item, .stat-item');
+    hoverTargets.forEach(el => {
+      el.addEventListener('mouseenter', () => cursorOuter.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => cursorOuter.classList.remove('hovering'));
+    });
 
-        const bioCanvas = document.getElementById('bioluminescence');
-        const bioCtx = bioCanvas.getContext('2d');
-        let particles = [];
-
-        function resize() {
-            bioCanvas.width = window.innerWidth;
-            bioCanvas.height = window.innerHeight;
+    // ── SCROLL REVEAL ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
         }
-        window.addEventListener('resize', resize);
-        resize();
+      });
+    }, { threshold: 0.12 });
 
-        class P {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.vx = (Math.random() - 0.5) * 1;
-                this.vy = (Math.random() - 0.5) * 1;
-                this.life = 1;
-                this.decay = 0.01 + Math.random() * 0.02;
-            }
-            update() { this.x += this.vx; this.y += this.vy; this.life -= this.decay; }
-            draw() {
-                bioCtx.beginPath();
-                bioCtx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
-                bioCtx.fillStyle = `rgba(0,180,216,${this.life * 0.5})`;
-                bioCtx.fill();
-            }
-        }
-
-        function animateBio() {
-            bioCtx.clearRect(0, 0, bioCanvas.width, bioCanvas.height);
-            if (Math.abs(mx - ox) > 1) {
-                particles.push(new P(mx, my));
-            }
-            particles.forEach((p, i) => {
-                p.update();
-                p.draw();
-                if (p.life <= 0) particles.splice(i, 1);
-            });
-            requestAnimationFrame(animateBio);
-        }
-        animateBio();
-
-        const nav = document.getElementById('nav');
-        window.addEventListener('scroll', () => {
-            nav.classList.toggle('scrolled', window.scrollY > 50);
-        });
-
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(e => {
-                if (e.isIntersecting) e.target.classList.add('visible');
-            });
-        }, { threshold: 0.1 });
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-    </script>
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
 </body>
 </html>
