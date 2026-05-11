@@ -1,90 +1,536 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guardian of the Oceans | ESS Project</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-    <style>
-        :root {
-            --primary: #0077b6;
-        }
-        body {
-            background-color: #f0faff;
-        }
-        ins {
-            color: #0096c7;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardian of the Oceans | ESS Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,600;1,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --deep: #020e1a;
+      --abyss: #04192e;
+      --ocean: #0a3d62;
+      --mid: #0c6e9e;
+      --bright: #00b4d8;
+      --foam: #90e0ef;
+      --white: #caf0f8;
+      --accent: #f77f00;
+      --danger: #e63946;
+      --text: #b8dce8;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--deep);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED OCEAN BACKGROUND ── */
+    .ocean-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: linear-gradient(180deg, #020e1a 0%, #04192e 40%, #0a3d62 100%);
+      pointer-events: none;
+    }
+    .ocean-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 40% at 20% 60%, rgba(0,180,216,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 30% at 80% 30%, rgba(12,110,158,0.12) 0%, transparent 60%);
+      animation: shimmer 8s ease-in-out infinite alternate;
+    }
+    @keyframes shimmer {
+      from { opacity: 0.6; transform: scale(1); }
+      to   { opacity: 1;   transform: scale(1.05); }
+    }
+
+    /* floating particles */
+    .particles { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--bright);
+      opacity: 0;
+      animation: float-up linear infinite;
+    }
+    @keyframes float-up {
+      0%   { transform: translateY(110vh) scale(0); opacity: 0; }
+      10%  { opacity: 0.4; }
+      90%  { opacity: 0.15; }
+      100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 3rem;
+      background: rgba(2,14,26,0.7);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(0,180,216,0.1);
+    }
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: 3px;
+      color: var(--bright);
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--bright); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      padding-top: 5rem;
+    }
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 4px;
+      color: var(--bright);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fade-up 0.8s 0.2s forwards;
+    }
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 14vw, 13rem);
+      line-height: 0.88;
+      color: var(--white);
+      letter-spacing: 2px;
+      opacity: 0;
+      animation: fade-up 1s 0.4s forwards;
+    }
+    .hero h1 span { color: var(--bright); display: block; }
+    .hero-sub {
+      max-width: 540px;
+      margin: 2.5rem auto 3rem;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text);
+      opacity: 0;
+      animation: fade-up 0.8s 0.7s forwards;
+    }
+    .cta-btn {
+      display: inline-block;
+      padding: 1rem 2.8rem;
+      background: transparent;
+      border: 2px solid var(--bright);
+      color: var(--bright);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.3s, color 0.3s, transform 0.2s;
+      opacity: 0;
+      animation: fade-up 0.8s 1s forwards;
+    }
+    .cta-btn:hover {
+      background: var(--bright);
+      color: var(--deep);
+      transform: translateY(-3px);
+    }
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── STAT BAR ── */
+    .stat-bar {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid rgba(0,180,216,0.15);
+      border-bottom: 1px solid rgba(0,180,216,0.15);
+      background: rgba(4,25,46,0.6);
+      backdrop-filter: blur(10px);
+    }
+    .stat-item {
+      padding: 2.5rem 2rem;
+      text-align: center;
+      border-right: 1px solid rgba(0,180,216,0.1);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.5rem;
+      color: var(--bright);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-top: 0.4rem;
+      opacity: 0.7;
+    }
+
+    /* ── SECTION WRAPPER ── */
+    .section {
+      position: relative; z-index: 1;
+      padding: 7rem 3rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 4px;
+      color: var(--bright);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+      opacity: 0.8;
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      color: var(--white);
+      letter-spacing: 1px;
+      line-height: 1;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── CHALLENGE CARDS ── */
+    .challenges-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5px;
+      margin-top: 4rem;
+      border: 1.5px solid rgba(0,180,216,0.15);
+    }
+    .card {
+      background: rgba(4,25,46,0.5);
+      padding: 3rem 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.4s;
+      cursor: default;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--bright), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+    .card:hover { background: rgba(10,61,98,0.5); }
+    .card:hover::before { transform: translateX(100%); }
+    .card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--white);
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+    }
+    .card-text {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text);
+      opacity: 0.85;
+    }
+    .card-stat {
+      margin-top: 2rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+
+    /* ── DIVIDER ── */
+    .wave-divider {
+      position: relative; z-index: 1;
+      width: 100%;
+      overflow: hidden;
+      line-height: 0;
+      margin: -1px 0;
+    }
+    .wave-divider svg { display: block; }
+
+    /* ── VIDEO SECTION ── */
+    .video-section {
+      position: relative; z-index: 1;
+      background: rgba(4,25,46,0.8);
+      padding: 7rem 3rem;
+    }
+    .video-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .video-wrapper {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border: 1px solid rgba(0,180,216,0.2);
+      box-shadow: 0 0 80px rgba(0,180,216,0.1), 0 0 0 1px rgba(0,180,216,0.05);
+      margin-top: 3rem;
+    }
+    .video-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
+    .video-caption {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      opacity: 0.5;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── TAKE ACTION ── */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-top: 3rem;
+    }
+    .action-item {
+      padding: 2rem;
+      border: 1px solid rgba(0,180,216,0.15);
+      background: rgba(4,25,46,0.3);
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .action-item:hover {
+      border-color: var(--bright);
+      transform: translateY(-5px);
+    }
+    .action-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      color: rgba(0,180,216,0.15);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .action-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 0.5rem;
+    }
+    .action-text {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      opacity: 0.7;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid rgba(0,180,216,0.1);
+      padding: 3rem;
+      text-align: center;
+    }
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      opacity: 0.4;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s, transform 0.8s;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .section { padding: 5rem 1.5rem; }
+      .stat-bar { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid rgba(0,180,216,0.1); }
+    }
+  </style>
 </head>
 <body>
 
-    <nav class="container">
-        <ul>
-            <li><strong>🌊 Guardian of the Oceans</strong></li>
-        </ul>
-        <ul>
-            <li><a href="#about">About</a></li>
-            <li><a href="#challenges">Challenges</a></li>
-            <li><a href="#video">Action</a></li>
-        </ul>
-    </nav>
+  <!-- Animated BG -->
+  <div class="ocean-bg"></div>
+  <div class="particles" id="particles"></div>
 
-    <main class="container">
-        <section style="text-align: center; padding: 4rem 0;">
-            <hgroup>
-                <h1 style="color: var(--primary);">Preserving Our Blue Planet</h1>
-                <h2>Understanding Ocean Sustainability for a Better Tomorrow</h2>
-            </hgroup>
-            <p>Our oceans cover 70% of the planet, regulate our climate, and provide food for billions. But they are under threat. This project explores why ocean sustainability is non-negotiable.</p>
-            <a href="#video" role="button">Watch the Challenge</a>
-        </section>
-        
-        <hr/>
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">🌊 Guardian</div>
+    <ul class="nav-links">
+      <li><a href="#challenges">Threats</a></li>
+      <li><a href="#video">Watch</a></li>
+      <li><a href="#action">Act</a></li>
+    </ul>
+  </nav>
 
-        <section id="challenges">
-            <h2>Core Challenges in Ocean Sustainability</h2>
-            <div class="grid">
-                <article>
-                    <header>🚫 Overfishing</header>
-                    Global fish stocks are being depleted faster than they can recover. This disrupts entire food webs and threatens food security for coastal communities.
-                </article>
-                <article>
-                    <header>🧪 Pollution</header>
-                    From plastic gyres to chemical runoff, our oceans have become a global dumping ground. <ins>Microplastics</ins> are now found in virtually all marine life.
-                </article>
-                <article>
-                    <header>🌡️ Climate Change</header>
-                    The ocean absorbs 90% of the Earth's excess heat. This causes ocean warming, coral bleaching, and ocean acidification, which weakens shell-forming organisms.
-                </article>
-            </div>
-        </section>
+  <!-- HERO -->
+  <section class="hero">
+    <p class="hero-eyebrow">ESS Class Project — SDG 14</p>
+    <h1>Preserving<span>Our Oceans</span></h1>
+    <p class="hero-sub">Our oceans cover 70% of the planet, regulate our climate, and feed billions. They're under siege — and the clock is running out.</p>
+    <a href="#challenges" class="cta-btn">Explore the Crisis</a>
+  </section>
 
-        <hr/>
+  <!-- STAT BAR -->
+  <div class="stat-bar">
+    <div class="stat-item">
+      <div class="stat-num">90%</div>
+      <div class="stat-label">Of Big Fish Populations Depleted</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">8M</div>
+      <div class="stat-label">Tons of Plastic Enter Oceans Yearly</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">50%</div>
+      <div class="stat-label">Of Coral Reefs Lost Since 1950</div>
+    </div>
+  </div>
 
-        <section id="video" style="max-width: 800px; margin: 0 auto; text-align: center;">
-            <h2>The Human Impact</h2>
-            <p>This video highlights the urgency of the situation and simple actions we can take.</p>
-            <figure>
-                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
-                  <iframe 
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;"
-                    src="https://www.youtube.com/embed/Sc6S1MvXp3U" 
-                    title="Ocean Sustainability Video" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                    allowfullscreen>
-                  </iframe>
-                </div>
-                <figcaption>A compelling look at the current state of our oceans.</figcaption>
-            </figure>
-        </section>
-    </main>
+  <!-- CHALLENGES -->
+  <div class="section" id="challenges">
+    <p class="section-tag reveal">Core Threats</p>
+    <h2 class="section-title reveal">The Crisis,<br>Laid Bare</h2>
+    <div class="challenges-grid">
+      <div class="card reveal">
+        <span class="card-icon">🚫</span>
+        <div class="card-title">Overfishing</div>
+        <p class="card-text">Global fish stocks are being stripped faster than they can ever recover. Entire food webs collapse as keystone species vanish, threatening the food security of over 600 million people who depend on fisheries.</p>
+        <div class="card-stat">⚠ 1 in 3 fish stocks — overexploited</div>
+      </div>
+      <div class="card reveal">
+        <span class="card-icon">🧪</span>
+        <div class="card-title">Pollution</div>
+        <p class="card-text">From the Great Pacific Garbage Patch to invisible microplastics, human waste has colonized every corner of the ocean. Microplastics now infiltrate the tissue of virtually every marine creature on Earth.</p>
+        <div class="card-stat">⚠ 51 trillion microplastic particles in our oceans</div>
+      </div>
+      <div class="card reveal">
+        <span class="card-icon">🌡️</span>
+        <div class="card-title">Climate Change</div>
+        <p class="card-text">The ocean absorbs 90% of the planet's excess heat. The result: mass coral bleaching events, rising sea levels, and ocean acidification that dissolves the shells of the creatures at the base of the food chain.</p>
+        <div class="card-stat">⚠ Ocean pH dropped 0.1 units — a 30% increase in acidity</div>
+      </div>
+    </div>
+  </div>
 
-    <footer class="container" style="text-align: center; padding: 2rem 0; font-size: 0.8rem;">
-        <hr/>
-        <p>Created by dd2331 for ESS Class Project</p>
-        <p>Source Data: UN Sustainable Development Goal 14</p>
-    </footer>
+  <!-- VIDEO -->
+  <div class="video-section" id="video">
+    <div class="video-inner">
+      <p class="section-tag reveal" style="text-align:center;">Watch</p>
+      <h2 class="section-title reveal" style="text-align:center;">See It<br>Happening</h2>
+      <p class="reveal" style="text-align:center; max-width:580px; margin:0 auto; line-height:1.8; opacity:0.8;">
+        This short film captures the current state of our oceans — and the simple choices each of us can make to turn the tide.
+      </p>
+      <div class="video-wrapper reveal">
+        <iframe
+          src="https://www.youtube.com/embed/UQWC1P9MIy4?rel=0&modestbranding=1"
+          title="Ocean Sustainability — Human Impact"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+      <p class="video-caption">A compelling look at the urgency of ocean conservation.</p>
+    </div>
+  </div>
 
+  <!-- TAKE ACTION -->
+  <div class="section" id="action">
+    <p class="section-tag reveal">What You Can Do</p>
+    <h2 class="section-title reveal">Small Actions,<br>Ocean Impact</h2>
+    <div class="actions-grid">
+      <div class="action-item reveal">
+        <div class="action-num">01</div>
+        <div class="action-title">Cut Single-Use Plastic</div>
+        <p class="action-text">Swap plastic bags, straws, and bottles for reusable alternatives. It's one of the fastest wins for marine life.</p>
+      </div>
+      <div class="action-item reveal">
+        <div class="action-num">02</div>
+        <div class="action-title">Eat Sustainably</div>
+        <p class="action-text">Choose seafood certified by the Marine Stewardship Council. Demand drives what fisheries supply.</p>
+      </div>
+      <div class="action-item reveal">
+        <div class="action-num">03</div>
+        <div class="action-title">Reduce Your Carbon</div>
+        <p class="action-text">Every ton of CO₂ avoided helps slow ocean warming and acidification. Walk, cycle, offset.</p>
+      </div>
+      <div class="action-item reveal">
+        <div class="action-num">04</div>
+        <div class="action-title">Support Ocean NGOs</div>
+        <p class="action-text">Organizations like Oceana and Ocean Conservancy fight daily for policy change and clean-up efforts.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Created by dd2331 for ESS Class Project</p>
+    <p>Source: UN Sustainable Development Goal 14 — Life Below Water</p>
+  </footer>
+
+  <script>
+    // ── PARTICLES ──
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 28; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const size = Math.random() * 4 + 1;
+      p.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random()*100}%;
+        animation-duration:${Math.random()*20+12}s;
+        animation-delay:${Math.random()*15}s;
+      `;
+      container.appendChild(p);
+    }
+
+    // ── SCROLL REVEAL ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
 </body>
 </html>
